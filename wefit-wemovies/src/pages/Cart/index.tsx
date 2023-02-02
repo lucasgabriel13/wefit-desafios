@@ -1,27 +1,71 @@
-import { Link } from 'react-router-dom';
-import { MdRemoveCircleOutline, MdAddCircleOutline, MdDelete } from 'react-icons/md';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  MdRemoveCircleOutline,
+  MdAddCircleOutline,
+  MdDelete
+} from 'react-icons/md';
 import { useTheme } from 'styled-components';
 
 import { Header } from "../../components/Header";
 
 import EmptyCartIllustration from '../../assets/cart-empty.svg';
 
-import { AmountProduct, CartTable, Container, DescriptionProduct, EmptyCart, Footer } from "./styles";
-import { formatPrice } from '../../utils/formatPrice';
+import {
+  AmountProduct,
+  Container,
+  Content,
+  DeleteProduct,
+  EmptyCart,
+  Footer,
+  ProductDescription,
+  ProductListItem,
+  ProductTable,
+  ProductTableHeader,
+  Subtotal
+} from "./styles";
 
-const DATA = [
-  {
-    "id": 3,
-    "title": "Homem Aranha",
-    "price": 29.9,
-    "image": "https://www.imagemhost.com.br/images/2022/07/10/spider-man.png"
-  },
-];
+import { formatPrice } from '../../utils/formatPrice';
+import { Product, useCart } from '../../hooks/useCart';
 
 export function Cart() {
-
-  const isEmptyCart = false;
   const { COLORS } = useTheme();
+  const { cart, removeProduct, updateProductAmount, finalizeOrder } = useCart();
+
+  const isEmptyCart = cart.length === 0 ? true : false;
+
+  const totalPrice = formatPrice(cart.reduce((sumTotal, product) => {
+    sumTotal += product.price * product.amount;
+    return sumTotal
+  }, 0));
+
+  const navigate = useNavigate();
+
+  function handleProductIncrement(product: Product) {
+    const productUpdated = {
+      productId: product.id,
+      amount: product.amount + 1
+    }
+
+    updateProductAmount(productUpdated.productId, productUpdated.amount)
+  }
+
+  function handleProductDecrement(product: Product) {
+    const productUpdated = {
+      productId: product.id,
+      amount: product.amount - 1
+    }
+
+    updateProductAmount(productUpdated.productId, productUpdated.amount)
+  }
+
+  function handleRemoveProduct(productId: number) {
+    removeProduct(productId)
+  }
+
+  function handleFinalizeOrder() {
+    finalizeOrder();
+    navigate('/finished');
+  }
 
   return (
     <>
@@ -40,67 +84,68 @@ export function Cart() {
               </EmptyCart>
             ) :
             (
-              <CartTable>
-                <thead>
-                  <tr>
-                    <th>Produto</th>
-                    <th></th>
-                    <th>QTD</th>
-                    <th>Subtotal</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {DATA.map(product => (
-                    <tr key={product.id}>
-                      <td>
+              <Content>
+                <ProductTable>
+                  <ProductTableHeader>
+                    <span>Produto</span>
+                    <span>Qtd</span>
+                    <span>Subtotal</span>
+                  </ProductTableHeader>
+                  {
+                    cart.map((product) => (
+                      <ProductListItem key={product.id}>
                         <img src={product.image} alt={product.title} />
-                      </td>
-                      <td>
-                        <DescriptionProduct>
+                        <ProductDescription>
                           <strong>{product.title}</strong>
                           <span>{formatPrice(product.price)}</span>
-                        </DescriptionProduct>
-                      </td>
-                      <td>
+                        </ProductDescription>
                         <AmountProduct>
-                          <button type="button">
+                          <button
+                            type="button"
+                            onClick={() => handleProductDecrement(product)}
+                          >
                             <MdRemoveCircleOutline size={18} color={COLORS.BLUE} />
                           </button>
                           <input
                             type="text"
+                            value={product.amount}
                             readOnly
                           />
-                          <button type="button">
+                          <button
+                            type="button"
+                            onClick={() => handleProductIncrement(product)}
+                          >
                             <MdAddCircleOutline size={18} color={COLORS.BLUE} />
                           </button>
                         </AmountProduct>
-                      </td>
-                      <td>
-                        <span>R$ 29,99</span>
-                      </td>
-                      <td>
-                        <button type="button">
-                          <MdDelete size={18} color={COLORS.BLUE} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </CartTable>
+                        <Subtotal>{formatPrice(product.price * product.amount)}</Subtotal>
+                        <DeleteProduct>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProduct(product.id)}>
+                            <MdDelete size={18} color={COLORS.BLUE} />
+                          </button>
+                        </DeleteProduct>
+                      </ProductListItem>
+                    ))
+                  }
+                </ProductTable>
+                <Footer>
+                  <button
+                    type="button"
+                    onClick={handleFinalizeOrder}
+                  >
+                    Finalizar pedido
+                  </button>
+
+                  <div>
+                    <span>Total</span>
+                    <span>{totalPrice}</span>
+                  </div>
+                </Footer>
+              </Content>
             )
         }
-
-        <Footer>
-          <button type="button">
-            Finalizar pedido
-          </button>
-
-          <div>
-            <span>Total</span>
-            <span>R$ 29,90</span>
-          </div>
-        </Footer>
       </Container>
     </>
   );

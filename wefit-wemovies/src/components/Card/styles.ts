@@ -1,5 +1,9 @@
 import styled from 'styled-components'
 
+type ButtonTypeStyleProps = {
+  isActive: boolean
+}
+
 export const Container = styled.div`
   width: 309.33px;
   height: 305px;
@@ -31,12 +35,13 @@ export const Container = styled.div`
   }
 `;
 
-export const Button = styled.button`
+export const Button = styled.button<ButtonTypeStyleProps>`
   width: 100%;
   height: 40px;
+  margin-top: 8px;
 
   color: ${({ theme }) => theme.COLORS.WHITE};
-  background-color: ${({ theme }) => theme.COLORS.BLUE};
+  background-color: ${({ theme, isActive }) => isActive ? theme.COLORS.GREEN : theme.COLORS.BLUE};
 
   display: flex;
   align-items: center;

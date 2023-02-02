@@ -8,9 +8,10 @@ import { formatPrice } from '../../utils/formatPrice';
 import { api } from '../../lib/axios';
 
 import { Container, ProductList } from "./styles";
+import { useCart } from '../../hooks/useCart';
 
 type Product = {
-  id: string;
+  id: number;
   title: string;
   price: number;
   image: string;
@@ -20,9 +21,22 @@ type ProductList = Product & {
   priceFormatted: string;
 }
 
+type ProductAmount = {
+  [key: number]: number;
+}
+
 export function Home() {
   const [products, setProducts] = useState<ProductList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { cart } = useCart();
+
+  const productAmount = cart.reduce((sumTotalAmount, product) => {
+    const newProductAmount = { ...sumTotalAmount };
+    newProductAmount[product.id] = product.amount;
+
+    return newProductAmount;
+  }, {} as ProductAmount);
 
   async function loadProducts() {
     const { data } = await api.get('products');
@@ -57,15 +71,16 @@ export function Home() {
         {
           isLoading ?
             (
-              <Loading  />
+              <Loading />
             ) :
             (
               products.map((product) => (
                 <Card
                   key={product.id}
+                  id={product.id}
                   title={product.title}
                   imageUrl={product.image}
-                  amount={0}
+                  amount={productAmount[product.id] ?? 0}
                   price={product.priceFormatted}
                 />
               ))

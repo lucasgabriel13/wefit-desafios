@@ -17,6 +17,11 @@ export const GlobaStyle = createGlobalStyle`
   button {
     cursor: pointer;
     border: 0;
+    transition: filter 0.3s;
+
+    &:hover {
+      filter: brightness(0.8);
+    }
   }
 
 `;
